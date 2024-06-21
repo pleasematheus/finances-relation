@@ -13,7 +13,7 @@ export class RevenueController {
   }
 
   static async buscarReceitaPorId(receitaId: number): Promise<Receita | null> {
-    const receita = await getRevenueById(receita)
+    const receita = await getRevenueById(receitaId)
     return receita
   }
 
