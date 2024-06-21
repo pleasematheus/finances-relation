@@ -4,6 +4,7 @@ import inquirer from "inquirer"
 
 export class RevenueView {
   static async menuReceita() {
-    console.log('Menu receitas')
+    console.clear()
+    console.log("===== Menu receitas =====")
   }
 }

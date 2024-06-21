@@ -5,6 +5,6 @@ import inquirer from "inquirer"
 export class UserView {
   static async menuUsuario() {
     console.clear()
-    console.log('Menu usuário')
+    console.log("===== Menu usuário =====")
   }
 }
