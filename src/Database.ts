@@ -1,12 +1,12 @@
-import mysql from 'mysql2/promise'
-import { Usuario } from './model/UsuarioModel'
-import { Receita } from './model/ReceitaModel'
+import mysql from "mysql2/promise"
+import { Usuario } from "./model/UserModel"
+import { Receita } from "./model/RevenueModel"
 
 const connectionConfig = {
-  host: 'localhost',
-  user: 'root',
-  password: '1234',
-  database: 'financas'
+  host: "localhost",
+  user: "root",
+  password: "1234",
+  database: "financas",
 }
 
 async function connect() {
@@ -78,10 +78,10 @@ async function getRevenueById(revenueId: number): Promise<Receita | null> {
 async function updateUser(user: Usuario): Promise<void> {
   const connection = await connect()
   //@ts-ignore
-  await connection.execute(
-    "UPDATE usuarios SET nome = ? WHERE id = ?",
-    [user.nome, user.id]
-  )
+  await connection.execute("UPDATE usuarios SET nome = ? WHERE id = ?", [
+    user.nome,
+    user.id,
+  ])
   connection.end()
 }
 
@@ -93,7 +93,7 @@ async function updateRevenue(revenue: Receita): Promise<void> {
     revenue.nome,
     revenue.valor,
     revenue.data,
-    revenue.id
+    revenue.id,
   ])
   connection.end()
 }
@@ -123,7 +123,7 @@ async function listAllUsers(): Promise<Usuario[]> {
     id: row.id,
     nome: row.nome,
     saldo: row.saldo,
-    somaReceitas: row.somaReceitas
+    somaReceitas: row.somaReceitas,
   }))
   return userList
 }
@@ -173,5 +173,5 @@ export {
   createRevenue,
   getRevenueById,
   updateRevenue,
-  listAllRevenues
+  listAllRevenues,
 }
