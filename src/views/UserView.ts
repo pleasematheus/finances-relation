@@ -52,7 +52,6 @@ export class UserView {
           }
 
           break
-        //Remover usuário
         case "3":
           const idRemocao: string = readLineSync.question(
             "Digite o id do usuário: "
@@ -60,9 +59,11 @@ export class UserView {
           const usuarioRemocao: Usuario | null =
             await UsuarioController.buscarUsuarioPorId(Number(idRemocao))
 
-          usuarioRemocao != null
-            ? await UsuarioController.removerUsuario(parseInt(idRemocao))
-            : console.log("Usuário inexistente")
+          if (usuarioRemocao != null){
+            await UsuarioController.removerUsuario(parseInt(idRemocao))
+            console.log(`Usuário ID ${idRemocao} removido!`)
+          } else
+              console.log("Usuário inexistente")
           break
         case "4":
           const id: string = readLineSync.question("Digite o ID do usuário: ")
