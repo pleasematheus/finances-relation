@@ -26,14 +26,33 @@ export class UserView {
       let opcao: string = readLineSync.question(">> ")
 
       switch (opcao) {
+        //Cadastrar usuário
         case "1":
           const novoUsuario = await this.cadastrar()
-          await UsuarioController.cadastrarUsuario(novoUsuario)
+          const novoUsuarioId = await UsuarioController.cadastrarUsuario(
+            novoUsuario
+          )
+          console.log(`Usuario ID ${novoUsuarioId} cadastrado`)
           break
+        //Atualizar usuário
         case "2":
-          const idAtualizar = readLineSync.question("Digite o Id do usuário: ")
-          console.log(idAtualizar)
+          const idAt: string = readLineSync.question(
+            "Entre com o ID do usuário: "
+          )
+
+          const usuarioAt: Usuario | null =
+            await UsuarioController.buscarUsuarioPorId(Number(idAt))
+
+          if (usuarioAt != null) {
+            const usuarioAtualizar = await this.cadastrar(parseInt(idAt))
+            await UsuarioController.atualizarUsuario(usuarioAtualizar)
+            console.log("Usuário atualizado com sucesso!")
+          } else {
+            console.log("Usuário inexistente")
+          }
+
           break
+        //Remover usuário
         case "3":
           const idRemocao: string = readLineSync.question(
             "Digite o id do usuário: "
@@ -57,8 +76,11 @@ export class UserView {
           this.listar(usuarios)
           break
         case "6":
-          const nome: string = readLineSync.question('Digite o nome para pesquisar: ')
-          const usuarioPesquisa: Usuario[] | null = await UsuarioController.listarUsuariosPorNome(nome)
+          const nome: string = readLineSync.question(
+            "Digite o nome para pesquisar: "
+          )
+          const usuarioPesquisa: Usuario[] | null =
+            await UsuarioController.listarUsuariosPorNome(nome)
           this.listar(usuarioPesquisa)
           break
         case "0":
@@ -75,7 +97,11 @@ export class UserView {
     const nome: string = readLineSync.question("Digite o nome: ")
     const saldo: string = readLineSync.question("Digite o saldo: ")
 
-    const usuario: Usuario = { id: id, nome: nome, saldo: parseFloat(saldo) }
+    const usuario: Usuario = {
+      id: id,
+      nome: nome,
+      saldo: parseFloat(saldo)
+    }
     return usuario
   }
 

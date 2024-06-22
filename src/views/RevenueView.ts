@@ -47,7 +47,6 @@ export class RevenueView {
             console.log("Receita inexistente")
           }
           break
-        //Remover receita
         case "3":
           const idRemocao: string = readLineSync.question(
             "Digite o ID da receita: "

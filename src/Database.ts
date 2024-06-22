@@ -32,8 +32,8 @@ async function createRevenue(receita: Receita): Promise<number> {
   const connection = await connect()
   //@ts-ignore
   const [result] = await connection.execute(
-    "insert into receitas (nome, valor, data) values (?, ?)",
-    [receita.nome, receita.valor, receita.data]
+    "insert into receitas (nome, valor, usuario_id) values (?, ?, ?)",
+    [receita.nome, receita.valor, receita.usuario_id]
   )
   connection.end()
   //@ts-ignore
@@ -55,24 +55,20 @@ async function getRevenueById(revenueId: number): Promise<Receita | null> {
   const connection = await connect()
   // @ts-ignore
   const [rows] = await connection.execute(
-    "select * from receitas where id = ?",
-    revenueId
+    "select * from receitas where usuario_id = ?",
+    [revenueId]
   )
   connection.end()
   // @ts-ignore
-  if (rows.length > 0) {
-    // @ts-ignore
-    const revenuesData = rows[0] as Receita
-    return revenuesData
-  }
-  return null
+  return rows || null
 }
 
 async function updateUser(user: Usuario): Promise<void> {
   const connection = await connect()
   //@ts-ignore
-  await connection.execute("UPDATE usuarios SET nome = ? WHERE id = ?", [
+  await connection.execute("UPDATE usuarios SET nome = ?, saldo = ? WHERE id = ?", [
     user.nome,
+    user.saldo,
     user.id,
   ])
   connection.end()
@@ -82,11 +78,10 @@ async function updateUser(user: Usuario): Promise<void> {
 async function updateRevenue(revenue: Receita): Promise<void> {
   const connection = await connect()
   //@ts-ignore
-  await connection.execute("UPDATE receitas SET nome = ? WHERE id = ?", [
+  await connection.execute("UPDATE receitas SET nome = ?, valor = ? WHERE id = ?", [
     revenue.nome,
     revenue.valor,
-    revenue.data,
-    revenue.id,
+    revenue.id
   ])
   connection.end()
 }
@@ -99,10 +94,10 @@ async function deleteUser(userId: number): Promise<void> {
 }
 
 // Fix insertion
-async function deleteRevenue(revenueId: number): Promise<void> {
+async function deleteRevenue(receitaId: number): Promise<void> {
   const connection = await connect()
   //@ts-ignore
-  await connection.execute("DELETE FROM receitas WHERE id = ?", [revenueId])
+  await connection.execute("DELETE FROM receitas WHERE id = ?", [receitaId])
   connection.end()
 }
 
@@ -121,20 +116,31 @@ async function listAllUsers(): Promise<Usuario[]> {
   return userList
 }
 
-// Fix insertion
 async function listAllRevenues(): Promise<Receita[]> {
   const connection = await connect()
   //@ts-ignore
-  const [rows] = await connection.execute("SELECT * FROM usuarios")
+  const [rows] = await connection.execute("SELECT * FROM receitas")
   connection.end()
   //@ts-ignore
-  const userList: Usuario[] = rows.map((row: any) => ({
+  const userList: Receita[] = rows.map((row: any) => ({
     id: row.id,
     nome: row.nome,
-    saldo: row.saldo,
-    somaReceitas: row.somaReceitas,
+    valor: row.valor,
+    data: row.data,
+    usuario_id: row.usuario_id
   }))
   return userList
+}
+
+async function listRevenueByUserId(userId: number): Promise<Receita[] | null> {
+  const connection = await connect()
+  // @ts-ignore
+  const [rows] = await connection.execute(
+    "SELECT r.id AS id, r.nome AS Receita, r.valor AS Valor, r.data AS Data FROM receitas r INNER JOIN usuarios u ON u.id = r.usuario_id WHERE u.id = ?",
+    [userId]
+  )
+  connection.end()
+  return rows || null
 }
 
 async function listUsersByName(user: string): Promise<Usuario[] | null> {
@@ -167,6 +173,6 @@ export {
   getRevenueById,
   updateRevenue,
   listAllRevenues,
+  deleteRevenue,
+  listRevenueByUserId,
 }
-
-
