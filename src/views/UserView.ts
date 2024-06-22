@@ -53,17 +53,24 @@ export class UserView {
 
           break
         case "3":
+          console.log('\n===== AVISO: AO APAGAR UM USUÁRIO TODAS AS RECEITAS DELE SERÃO EXCLUIDAS =====\n')
           const idRemocao: string = readLineSync.question(
             "Digite o id do usuário: "
           )
           const usuarioRemocao: Usuario | null =
             await UsuarioController.buscarUsuarioPorId(Number(idRemocao))
 
-          if (usuarioRemocao != null){
-            await UsuarioController.removerUsuario(parseInt(idRemocao))
-            console.log(`Usuário ID ${idRemocao} removido!`)
-          } else
-              console.log("Usuário inexistente")
+          console.log('Deseja realmente apagar este usuário?')
+          console.log('[S] Sim [N] Nao')
+          const confirmacao: string = readLineSync.question('>> ')
+
+          if (confirmacao === 'S') {
+            if (usuarioRemocao != null){
+              await UsuarioController.removerUsuario(parseInt(idRemocao))
+              console.log(`Usuário ID ${idRemocao} removido!`)
+            } else
+                console.log("Usuário inexistente")
+          }
           break
         case "4":
           const id: string = readLineSync.question("Digite o ID do usuário: ")

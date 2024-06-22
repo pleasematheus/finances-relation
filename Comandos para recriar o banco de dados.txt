@@ -1,0 +1,21 @@
+1 - create database financas;
+
+2 - use financas;
+
+3 - create table usuarios (
+id int auto_increment primary key,
+nome varchar(45) not null,
+saldo float not null default 0
+);
+
+4 - create table receitas (
+id int auto_increment primary key,
+nome varchar(45) not null,
+valor float not null default 0,
+data date not null default (current_date),
+usuario_id int,
+constraint receitas_ibfk_1
+foreign key (usuario_id)
+references usuarios(id)
+on delete cascade
+);
