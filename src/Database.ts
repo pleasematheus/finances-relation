@@ -19,8 +19,8 @@ async function createUser(usuario: Usuario): Promise<number> {
   const connection = await connect()
   //@ts-ignore
   const [result] = await connection.execute(
-    "insert into usuarios (nome, saldo, data) values (?, ?)",
-    [usuario.nome, usuario.saldo, new Date()]
+    "insert into usuarios (nome, saldo) values (?, ?)",
+    [usuario.nome, usuario.saldo]
   )
   connection.end()
   //@ts-ignore
@@ -44,17 +44,10 @@ async function getUserById(userId: number): Promise<Usuario | null> {
   const connection = await connect()
   // @ts-ignore
   const [rows] = await connection.execute(
-    "select * from usuarios where id = ?",
-    userId
+    "SELECT * FROM usuarios WHERE id = ?",
+    [userId]
   )
-  connection.end()
-  // @ts-ignore
-  if (rows.length > 0) {
-    // @ts-ignore
-    const userData = rows[0] as Usuario
-    return userData
-  }
-  return null
+  return rows[0] || null
 }
 
 // Fix insertion
@@ -175,3 +168,5 @@ export {
   updateRevenue,
   listAllRevenues,
 }
+
+

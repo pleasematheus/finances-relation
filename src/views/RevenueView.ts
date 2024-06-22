@@ -1,6 +1,6 @@
 import { Receita } from "../model/RevenueModel"
 import { RevenueController } from "../controller/ReceitaController"
-import inquirer from "inquirer"
+import * as readLineSync from "readline-sync"
 
 export class RevenueView {
   static async menuReceita() {
