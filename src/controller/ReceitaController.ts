@@ -4,7 +4,9 @@ import {
   getRevenueById,
   updateRevenue,
   listAllRevenues,
-} from '../Database'
+  deleteRevenue,
+  listRevenueByUserId,
+} from "../Database"
 
 export class RevenueController {
   static async cadastrarReceita(receita: Receita): Promise<number> {
@@ -23,6 +25,15 @@ export class RevenueController {
 
   static async listarTodasAsReceitas(): Promise<Receita[]> {
     const receitas = await listAllRevenues()
+    return receitas
+  }
+
+  static async removerReceita(receitaId: number): Promise<void> {
+    await deleteRevenue(receitaId)
+  }
+
+  static async listarReceitaPorUsuarioId(userId: number): Promise<Receita[] | null> {
+    const receitas = await listRevenueByUserId(userId)
     return receitas
   }
 }

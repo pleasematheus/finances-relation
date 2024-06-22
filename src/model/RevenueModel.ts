@@ -1,6 +1,7 @@
 export interface Receita {
-  id?: number;
-  nome: string;
-  valor?: number;
-  data?: string;
+  id?: number
+  nome: string
+  valor: number
+  data?: string
+  usuario_id: number
 }
