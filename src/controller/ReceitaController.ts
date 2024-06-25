@@ -1,39 +1,47 @@
-import { Receita } from "../model/RevenueModel"
-import {
-  createRevenue,
-  getRevenueById,
-  updateRevenue,
-  listAllRevenues,
-  deleteRevenue,
-  listRevenueByUserId,
-} from "../Database"
+import { PrismaClient, Receitas } from "@prisma/client"
+const prisma = new PrismaClient()
 
 export class RevenueController {
-  static async cadastrarReceita(receita: Receita): Promise<number> {
-    const idInsercao: number = await createRevenue(receita)
-    return idInsercao
+  static async cadastrarReceita(receita: Receitas): Promise<number> {
+    const idInsercao = await prisma.receitas.create({
+      data: {
+        nome: receita.nome,
+        valor: receita.valor,
+        usuarioId: receita.usuarioId,
+      },
+    })
+    return idInsercao.id
   }
 
-  static async buscarReceitaPorId(receitaId: number): Promise<Receita | null> {
-    const receita = await getRevenueById(receitaId)
-    return receita
+  static async buscarReceitaPorId(receitaId: number): Promise<Receitas | null> {
+    return await prisma.receitas.findUnique({
+      where: { id: receitaId },
+    })
   }
 
-  static async atualizarReceita(receita: Receita): Promise<void> {
-    await updateRevenue(receita)
+  static async atualizarReceita(receita: Receitas): Promise<void> {
+    await prisma.receitas.update({
+      where: { id: receita.id },
+      data: receita,
+    })
   }
 
-  static async listarTodasAsReceitas(): Promise<Receita[]> {
-    const receitas = await listAllRevenues()
+  static async listarTodasAsReceitas(): Promise<Receitas[]> {
+    const receitas: Receitas[] = await prisma.receitas.findMany()
     return receitas
   }
 
   static async removerReceita(receitaId: number): Promise<void> {
-    await deleteRevenue(receitaId)
+    await prisma.receitas.delete({
+      where: { id: receitaId },
+    })
   }
 
-  static async listarReceitaPorUsuarioId(userId: number): Promise<Receita[] | null> {
-    const receitas = await listRevenueByUserId(userId)
-    return receitas
+  static async listarReceitasPorUsuario(userId: number): Promise<Receitas[]> {
+    return await prisma.receitas.findMany({
+      where: {
+        usuarioId: userId,
+      },
+    })
   }
 }

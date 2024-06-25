@@ -1,178 +1,102 @@
-import mysql from "mysql2/promise"
-import { Usuario } from "./model/UserModel"
-import { Receita } from "./model/RevenueModel"
+import { PrismaClient, Usuarios, Receitas } from "@prisma/client"
+const prisma = new PrismaClient()
 
-const connectionConfig = {
-  host: "localhost",
-  user: "root",
-  password: "1234",
-  database: "financas",
-}
-
-async function connect() {
-  const connection = await mysql.createConnection(connectionConfig)
-
-  return connection
-}
-
-async function createUser(usuario: Usuario): Promise<number> {
-  const connection = await connect()
-  //@ts-ignore
-  const [result] = await connection.execute(
-    "insert into usuarios (nome, saldo) values (?, ?)",
-    [usuario.nome, usuario.saldo]
-  )
-  connection.end()
+async function createUser(usuario: Usuarios): Promise<number> {
+  const result = await prisma.usuarios.create({
+    data: {
+      id: 0,
+      nome: usuario.nome,
+      saldo: usuario.saldo,
+      email: usuario.email,
+      passw: usuario.passw,
+    },
+  })
   //@ts-ignore
   return result.insertId
 }
 
-// Fix insertion
-async function createRevenue(receita: Receita): Promise<number> {
-  const connection = await connect()
-  //@ts-ignore
-  const [result] = await connection.execute(
-    "insert into receitas (nome, valor, usuario_id) values (?, ?, ?)",
-    [receita.nome, receita.valor, receita.usuario_id]
-  )
-  connection.end()
+async function createRevenue(receita: Receitas): Promise<number> {
+  const result = await prisma.receitas.create({
+    data: {
+      id: 0,
+      nome: receita.nome,
+      valor: receita.valor,
+      usuarioId: receita.usuarioId,
+    },
+  })
   //@ts-ignore
   return result.insertId
 }
 
-async function getUserById(userId: number): Promise<Usuario | null> {
-  const connection = await connect()
-  // @ts-ignore
-  const [rows] = await connection.execute(
-    "SELECT * FROM usuarios WHERE id = ?",
-    [userId]
-  )
-  return rows[0] || null
+async function getUserById(userId: number): Promise<Usuarios | null> {
+  const user = await prisma.usuarios.findUnique({
+    where: { id: userId },
+  })
+  return user || null
 }
 
-// Fix insertion
-async function getRevenueById(revenueId: number): Promise<Receita | null> {
-  const connection = await connect()
-  // @ts-ignore
-  const [rows] = await connection.execute(
-    "select * from receitas where usuario_id = ?",
-    [revenueId]
-  )
-  connection.end()
-  // @ts-ignore
-  return rows || null
+async function getRevenueById(revenueId: number): Promise<Receitas | null> {
+  const revenue = await prisma.receitas.findUnique({
+    where: { id: revenueId },
+  })
+  return revenue || null
 }
 
-async function updateUser(user: Usuario): Promise<void> {
-  const connection = await connect()
-  //@ts-ignore
-  await connection.execute("UPDATE usuarios SET nome = ?, saldo = ? WHERE id = ?", [
-    user.nome,
-    user.saldo,
-    user.id,
-  ])
-  connection.end()
+async function updateUser(user: Usuarios): Promise<void> {
+  await prisma.usuarios.update({
+    where: { id: user.id },
+    data: user,
+  })
 }
 
-// Fix insertion
-async function updateRevenue(revenue: Receita): Promise<void> {
-  const connection = await connect()
-  //@ts-ignore
-  await connection.execute("UPDATE receitas SET nome = ?, valor = ? WHERE id = ?", [
-    revenue.nome,
-    revenue.valor,
-    revenue.id
-  ])
-  connection.end()
+async function updateRevenue(revenue: Receitas): Promise<void> {
+  await prisma.receitas.update({
+    where: { id: revenue.id },
+    data: revenue,
+  })
 }
 
 async function deleteUser(userId: number): Promise<void> {
-  const connection = await connect()
-  //@ts-ignore
-  await connection.execute("DELETE FROM usuarios WHERE id = ?", [userId])
-  connection.end()
+  await prisma.$transaction([
+    prisma.receitas.deleteMany({ where: { usuarioId: userId } }),
+    prisma.usuarios.delete({ where: { id: userId } }),
+  ])
 }
 
-// Fix insertion
 async function deleteRevenue(receitaId: number): Promise<void> {
-  const connection = await connect()
-  //@ts-ignore
-  await connection.execute("DELETE FROM receitas WHERE id = ?", [receitaId])
-  connection.end()
+  await prisma.receitas.delete({
+    where: { id: receitaId },
+  })
 }
 
-async function listAllUsers(): Promise<Usuario[]> {
-  const connection = await connect()
-  //@ts-ignore
-  const [rows] = await connection.execute("SELECT * FROM usuarios")
-  connection.end()
-  //@ts-ignore
-  const userList: Usuario[] = rows.map((row: any) => ({
-    id: row.id,
-    nome: row.nome,
-    saldo: row.saldo,
-    somaReceitas: row.somaReceitas,
-  }))
-  return userList
+async function listAllUsers(): Promise<Usuarios[]> {
+  const users = await prisma.usuarios.findMany()
+  return users
 }
 
-async function listAllRevenues(): Promise<Receita[]> {
-  const connection = await connect()
-  //@ts-ignore
-  const [rows] = await connection.execute("SELECT * FROM receitas")
-  connection.end()
-  //@ts-ignore
-  const userList: Receita[] = rows.map((row: any) => ({
-    id: row.id,
-    nome: row.nome,
-    valor: row.valor,
-    data: row.data,
-    usuario_id: row.usuario_id
-  }))
-  return userList
+async function listAllRevenues(): Promise<Receitas[]> {
+  const receitas = await prisma.receitas.findMany()
+  return receitas
 }
 
-async function listRevenueByUserId(userId: number): Promise<Receita[] | null> {
-  const connection = await connect()
-  // @ts-ignore
-  const [rows] = await connection.execute(
-    "SELECT r.id AS id, r.nome AS Receita, r.valor AS Valor, r.data AS Data FROM receitas r INNER JOIN usuarios u ON u.id = r.usuario_id WHERE u.id = ?",
-    [userId]
-  )
-  connection.end()
-  return rows || null
-}
+async function login(email: string, passw: string): Promise<Usuarios | null> {
+  const user = await prisma.usuarios.findFirst({
+    where: { email: email, passw: passw },
+  })
 
-async function listUsersByName(user: string): Promise<Usuario[] | null> {
-  const connection = await connect()
-  //@ts-ignore
-  const [rows] = await connection.execute(
-    `select * from usuarios where lower(nome) like "${user}%"`
-  )
-  connection.end()
-  //@ts-ignore
-  const userList: Usuario[] = rows.map((row: any) => ({
-    id: row.id,
-    nome: row.nome,
-    saldo: row.saldo,
-    somaReceitas: row.somaReceitas,
-  }))
-
-  return userList
+  return user || null
 }
 
 export {
-  connect,
   createUser,
   updateUser,
   deleteUser,
   getUserById,
   listAllUsers,
-  listUsersByName,
   createRevenue,
   getRevenueById,
   updateRevenue,
   listAllRevenues,
   deleteRevenue,
-  listRevenueByUserId,
+  login,
 }

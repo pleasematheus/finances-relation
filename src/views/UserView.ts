@@ -1,10 +1,12 @@
-import { Usuario } from "../model/UserModel"
+import { Usuarios } from "@prisma/client"
 import { UsuarioController } from "../controller/UsuarioController"
 import * as readLineSync from "readline-sync"
+import { RevenueView } from "../views/RevenueView"
 
 export class UserView {
   static async menuUsuario() {
     let continuar = true
+    let login
 
     while (continuar) {
       console.log("\t===== Menu usuário ====")
@@ -15,7 +17,7 @@ export class UserView {
         "[3] - Remover usuário",
         "[4] - Buscar usuário por Id",
         "[5] - Listar todos os usuários",
-        "[6] - Buscar usuário por nome",
+        "[6] - Login",
         "[0] - Sair",
       ]
 
@@ -28,7 +30,7 @@ export class UserView {
       switch (opcao) {
         //Cadastrar usuário
         case "1":
-          const novoUsuario = await this.cadastrar()
+          const novoUsuario: Usuarios = await this.cadastrar()
           const novoUsuarioId = await UsuarioController.cadastrarUsuario(
             novoUsuario
           )
@@ -40,7 +42,7 @@ export class UserView {
             "Entre com o ID do usuário: "
           )
 
-          const usuarioAt: Usuario | null =
+          const usuarioAt: Usuarios | null =
             await UsuarioController.buscarUsuarioPorId(Number(idAt))
 
           if (usuarioAt != null) {
@@ -53,46 +55,50 @@ export class UserView {
 
           break
         case "3":
-          console.log('\n===== AVISO: AO APAGAR UM USUÁRIO TODAS AS RECEITAS DELE SERÃO EXCLUIDAS =====\n')
+          console.log(
+            "\n===== AVISO: AO APAGAR UM USUÁRIO TODAS AS RECEITAS DELE SERÃO EXCLUÍDAS =====\n"
+          )
           const idRemocao: string = readLineSync.question(
             "Digite o id do usuário: "
           )
-          const usuarioRemocao: Usuario | null =
+          const usuarioRemocao: Usuarios | null =
             await UsuarioController.buscarUsuarioPorId(Number(idRemocao))
 
-          console.log('Deseja realmente apagar este usuário?')
-          console.log('[S] Sim [N] Nao')
-          const confirmacao: string = readLineSync.question('>> ')
+          console.log("Deseja realmente apagar este usuário?")
+          console.log("[S] Sim [N] Nao")
+          const confirmacao: string = readLineSync.question(">> ")
 
-          if (confirmacao === 'S') {
-            if (usuarioRemocao != null){
+          if (confirmacao === "S") {
+            if (usuarioRemocao != null) {
               await UsuarioController.removerUsuario(parseInt(idRemocao))
               console.log(`Usuário ID ${idRemocao} removido!`)
-            } else
-                console.log("Usuário inexistente")
+            } else console.log("Usuário inexistente")
           }
           break
         case "4":
           const id: string = readLineSync.question("Digite o ID do usuário: ")
-          const user: Usuario | null =
+          const user: Usuarios | null =
             await UsuarioController.buscarUsuarioPorId(Number(id))
           this.listar(user)
           break
         case "5":
-          const usuarios: Usuario[] =
+          const usuarios: Usuarios[] =
             await UsuarioController.listarTodosOsUsuarios()
           this.listar(usuarios)
           break
         case "6":
-          const nome: string = readLineSync.question(
-            "Digite o nome para pesquisar: "
-          )
-          const usuarioPesquisa: Usuario[] | null =
-            await UsuarioController.listarUsuariosPorNome(nome)
-          this.listar(usuarioPesquisa)
+          const email: string = readLineSync.question("Digite o email: ")
+          const passw: string = readLineSync.question("Digite a senha: ")
+
+          login = await UsuarioController.login(email, passw)
+          if (login !== null) {
+            await RevenueView.menuReceita(login.id)
+          } else {
+            console.log("Login incorreto!\n")
+          }
           break
         case "0":
-          console.log("Voltando...")
+          console.log("Saindo...")
           continuar = false
           break
         default:
@@ -104,16 +110,20 @@ export class UserView {
   static async cadastrar(id?: number) {
     const nome: string = readLineSync.question("Digite o nome: ")
     const saldo: string = readLineSync.question("Digite o saldo: ")
+    const email: string = readLineSync.question("Digite o email: ")
+    const passw: string = readLineSync.question("Digite a senha: ")
 
-    const usuario: Usuario = {
-      id: id,
+    const usuario: Usuarios = {
+      id: id ?? 0,
       nome: nome,
-      saldo: parseFloat(saldo)
+      saldo: parseFloat(saldo),
+      email: email,
+      passw: passw,
     }
     return usuario
   }
 
-  static listar(usuarios: Usuario[] | Usuario | null) {
+  static listar(usuarios: Usuarios[] | Usuarios | null) {
     console.table(usuarios)
   }
 }
